@@ -5,11 +5,7 @@ TCut selection for ROOT TTree to Qastle wrapper for ServiceX xAOD and Uproot tra
 
 Usage:
     import tcut_to_qastle
-    tq = tcut_to_qastle.Translate(<TCut selection>, <Columns to deliver>)
-    query = tq.to_qastle()
-
+    query = tcut_to_qastle.translate(<TCut selection>, <Columns to deliver>)
 """
 
-from .translate import Translate
-
-__all__ = ["to_qastle", "list_of_columns_in_selection", "tcut_selection", "selected_columns"]
+from .translate import translate, get_list_of_columns_in_selection

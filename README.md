@@ -11,23 +11,22 @@
 ```
 import tcut_to_qastle
 
-# Load
-tq = tcut_to_qastle.Translate(<TCut selection>, <Columns to deliver>)
 
 # Get Qastle query
-query = tq.to_qastle() 
+query = tcut_to_qastle.translate(<TCut selection>, <Columns to deliver>)
 
 # Get the list of columns in the TCut selection
-columns_in_selection = tq.list_of_columns_in_selection
+columns_in_selection = tcut_to_qastle.get_list_of_columns_in_selection(<TCut selection>)
 ```
 
 ## Example
 
 ```
 >>> import tcut_to_qastle
->>> tq = tcut_to_qastle.Translate("A && B * C>0", "A,B")
->>> tq.to_qastle()
+>>> query = tcut_to_qastle.translate("A && B * C>0", "A,B")
+>>> query
 "(Select (Where (call EventDataset) (lambda (list event) (and (> (attr event 'A') 0) (> (* (attr event 'B') (attr event 'C')) 0)))) (lambda (list event) (dict (list 'A' 'B') (list (attr event 'A') (attr event 'B')))))"
->>> tq.list_of_columns_in_selection
+>>> columns_in_selection = tcut_to_qastle.get_list_of_columns_in_selection("A && B * C>0")
+>>> columns_in_selection
 ['A', 'B', 'C']
 ```
