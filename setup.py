@@ -4,7 +4,7 @@ with open("README.md") as fh:
     long_description = fh.read()
 
 setuptools.setup(name = "tcut_to_qastle",
-    version = "0.1",
+    version = "0.2",
     packages = setuptools.find_packages(exclude=['tests']),
     description = "TCut selection for ROOT TTree to Qastle wrapper for ServiceX xAOD and Uproot transformer",
     long_description = long_description,
