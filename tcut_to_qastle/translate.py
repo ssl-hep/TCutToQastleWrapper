@@ -3,6 +3,28 @@ import ast
 import re
 
 
+def _check_parentheses(expression): 
+      
+    open_tup = tuple('(') 
+    close_tup = tuple(')') 
+    map = dict(zip(open_tup, close_tup)) 
+    queue = [] 
+  
+    for i in expression: 
+        if i in open_tup: 
+            queue.append(map[i]) 
+        elif i in close_tup: 
+            if not queue or i != queue.pop(): 
+                # return "Unbalanced"
+                raise Exception("TCut selection query has unbalanced parentheses")
+    if not queue: 
+        # return "Balanced"
+        pass
+    else: 
+        # return "Unbalanced"
+        raise Exception("TCut selection query has ubalanced parentheses")
+
+
 def _multiple_replace(dict, text):
     # Create a regular expression  from the dictionary keys
     regex = re.compile("(%s)" % "|".join(map(re.escape, dict.keys())))
@@ -84,7 +106,7 @@ def _translate_selection(tcut_selection:str):
 def _translate_selected_columns(selected_columns:str): 
     passDict = True
     passList = False   
-    if selected_columns.lower() == 'all':
+    if selected_columns.lower() == "":    
         selected_columns_text = 'event'
     else:            
         if passDict:
@@ -100,9 +122,12 @@ def _translate_selected_columns(selected_columns:str):
     return selected_columns_text
 
 
-def translate(tcut_selection:str, selected_columns:str):
-    if tcut_selection.lower() == "none":
-        query = "EventDataset().Select(\"lambda event: " + _translate_selected_columns(selected_columns) + "\")"
+def translate(tree_name:str, selected_columns:str = "", tcut_selection:str = ""):
+    _check_parentheses(tcut_selection)
+    if tree_name is "":
+        raise Exception("Tree name is missing")
+    if tcut_selection is "":
+        query = f"EventDataset(\"ServiceXDatasetSource\", \"{tree_name}\").Select(\"lambda event:  {_translate_selected_columns(selected_columns)} \")"
     else:
-        query = "EventDataset().Where('lambda event: " + _translate_selection(tcut_selection) + "').Select(\"lambda event: " + _translate_selected_columns(selected_columns) + "\")"
+        query = f"EventDataset(\"ServiceXDatasetSource\", \"{tree_name}\").Where(\"lambda event: {_translate_selection(tcut_selection)} \").Select(\"lambda event: {_translate_selected_columns(selected_columns)} \")"            
     return qastle.python_ast_to_text_ast(qastle.insert_linq_nodes(ast.parse(query)))
