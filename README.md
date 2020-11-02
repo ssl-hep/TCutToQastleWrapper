@@ -36,4 +36,4 @@ columns_in_selection = tcut_to_qastle.get_list_of_columns_in_selection(<TCut sel
 
 ## Compatibility
 Current version is compatible with the following docker image tag of the uproot transformer
-- `sslhep/servicex_func_adl_uproot_transformer:issue6`
+- `sslhep/servicex_func_adl_uproot_transformer:v1.0.0-rc.3`

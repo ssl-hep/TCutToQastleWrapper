@@ -26,7 +26,7 @@ setuptools.setup(name = "tcut_to_qastle",
     long_description_content_type='text/markdown',
     author = "KyungEon Choi (UT Austin)",
     author_email = "kyungeonchoi@utexas.edu",
-    url = "https://github.com/kyungeonchoi/TCutToQastleWrapper",
+    url = "https://github.com/ssl-hep/TCutToQastleWrapper",
     license = "BSD 3-clause",
     install_requires = ["qastle>=0.5"],
     classifiers = [
