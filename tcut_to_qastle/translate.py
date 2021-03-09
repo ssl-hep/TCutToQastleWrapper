@@ -43,7 +43,8 @@ def get_list_of_columns_in_selection(tcut_selection:str):
         "*" : " ",
         "/" : " ",
         "+" : " ",
-        "-" : " "
+        "-" : " ",
+        "sqrt": " "
     }
     remove_patterns = _multiple_replace(ignore_patterns, tcut_selection)
 
@@ -72,7 +73,7 @@ def _replace_operators(translated_selection:str):
         ">=" : " >= ",
         "<=" : " <= ",
         ">" : " > ",
-        "<" : " < "    
+        "<" : " < "        
     }
     translated_selection = _multiple_replace(replace_patterns, translated_selection)
     translated_selection = " ".join(translated_selection.split()) # Remove duplicate whitespace
@@ -96,10 +97,18 @@ def _replace_boolean(tcut_selection:str, translated_selection:str):
     return translated_selection
 
 
+def _replace_sqrt(tcut_selection:str):
+    p = re.compile(r'sqrt\((?P<name>\w+)\)')
+    selection_sqrt = p.sub(r'(\g<name>)**0.5',tcut_selection)
+    return selection_sqrt
+
+
 def _translate_selection(tcut_selection:str):
-    tcut_selection_with_event = _decorate_columns_in_selection(tcut_selection)
+    tcut_selection_after_sqrt = _replace_sqrt(tcut_selection)
+    tcut_selection_with_event = _decorate_columns_in_selection(tcut_selection_after_sqrt)
     tcut_selection_after_operator_replacement = _replace_operators(tcut_selection_with_event)
     selection_in_func_adl = _replace_boolean(tcut_selection, tcut_selection_after_operator_replacement)
+    # print(f'translate_selection:\n {selection_in_func_adl}\n')
     return selection_in_func_adl
 
 
@@ -130,4 +139,5 @@ def translate(tree_name:str, selected_columns:str = "", tcut_selection:str = "")
         query = f"EventDataset(\"ServiceXDatasetSource\", \"{tree_name}\").Select(\"lambda event:  {_translate_selected_columns(selected_columns)} \")"
     else:
         query = f"EventDataset(\"ServiceXDatasetSource\", \"{tree_name}\").Where(\"lambda event: {_translate_selection(tcut_selection)} \").Select(\"lambda event: {_translate_selected_columns(selected_columns)} \")"            
+    # print(f'func-adl query: \n{query}\n')
     return qastle.python_ast_to_text_ast(qastle.insert_linq_nodes(ast.parse(query)))
