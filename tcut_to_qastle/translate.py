@@ -43,7 +43,8 @@ def get_list_of_columns_in_selection(tcut_selection:str):
         "*" : " ",
         "/" : " ",
         "+" : " ",
-        "-" : " "
+        "-" : " ",
+        "sqrt": " "
     }
     remove_patterns = _multiple_replace(ignore_patterns, tcut_selection)
 
@@ -72,7 +73,7 @@ def _replace_operators(translated_selection:str):
         ">=" : " >= ",
         "<=" : " <= ",
         ">" : " > ",
-        "<" : " < "    
+        "<" : " < "        
     }
     translated_selection = _multiple_replace(replace_patterns, translated_selection)
     translated_selection = " ".join(translated_selection.split()) # Remove duplicate whitespace
@@ -96,10 +97,18 @@ def _replace_boolean(tcut_selection:str, translated_selection:str):
     return translated_selection
 
 
-def _translate_selection(tcut_selection:str):
-    tcut_selection_with_event = _decorate_columns_in_selection(tcut_selection)
+def _replace_sqrt(tcut_selection:str):
+    p = re.compile(r'sqrt\((?P<name>\w+)\)')
+    selection_sqrt = p.sub(r'(\g<name>)**0.5',tcut_selection)
+    return selection_sqrt
+
+
+def _translate_selection(tcut_selection:str, verbose:bool=False):
+    tcut_selection_after_sqrt = _replace_sqrt(tcut_selection)
+    tcut_selection_with_event = _decorate_columns_in_selection(tcut_selection_after_sqrt)
     tcut_selection_after_operator_replacement = _replace_operators(tcut_selection_with_event)
     selection_in_func_adl = _replace_boolean(tcut_selection, tcut_selection_after_operator_replacement)
+    if verbose: print(f'\033[32mfunc-adl selection syntax:\033[0m\n {selection_in_func_adl}\n\n')
     return selection_in_func_adl
 
 
@@ -122,12 +131,17 @@ def _translate_selected_columns(selected_columns:str):
     return selected_columns_text
 
 
-def translate(tree_name:str, selected_columns:str = "", tcut_selection:str = ""):
+def translate(tree_name:str, selected_columns:str = "", tcut_selection:str = "", verbose:bool = False):
+    if verbose: print(f'\033[32mTCut selection syntax:\033[0m\n{tcut_selection}\n\n')
     _check_parentheses(tcut_selection)
     if tree_name is "":
         raise Exception("Tree name is missing")
     if tcut_selection is "":
         query = f"EventDataset(\"ServiceXDatasetSource\", \"{tree_name}\").Select(\"lambda event:  {_translate_selected_columns(selected_columns)} \")"
     else:
-        query = f"EventDataset(\"ServiceXDatasetSource\", \"{tree_name}\").Where(\"lambda event: {_translate_selection(tcut_selection)} \").Select(\"lambda event: {_translate_selected_columns(selected_columns)} \")"            
-    return qastle.python_ast_to_text_ast(qastle.insert_linq_nodes(ast.parse(query)))
+        query = f"EventDataset(\"ServiceXDatasetSource\", \"{tree_name}\").Where(\"lambda event: {_translate_selection(tcut_selection, verbose)} \").Select(\"lambda event: {_translate_selected_columns(selected_columns)} \")"    
+    query_qastle = qastle.python_ast_to_text_ast(qastle.insert_linq_nodes(ast.parse(query)))
+    if verbose:
+        print(f'\033[32mFull func-adl query:\033[0m\n{query}\n\n')
+        print(f'\033[32mFull qastle query:\033[0m\n{query_qastle}\n\n')
+    return query_qastle
