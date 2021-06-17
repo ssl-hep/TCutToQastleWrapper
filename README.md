@@ -5,6 +5,7 @@
 - Arithmetic operators: `+, -, *, /`
 - Logical operators: `!, &&, ||`
 - Relational and comparison operators: `==, !=, >, <, >=, <=`
+- Ternary operator: `(A?B:C)` - has to be enclosed in parentheses
 - Mathematical function: `sqrt`
 
 ## Usage
