@@ -33,6 +33,50 @@ def _multiple_replace(dict, text):
     return regex.sub(lambda mo: dict[mo.string[mo.start():mo.end()]], text) 
 
 
+def _replace_ternary_operator(tcut_selection:str):
+    # # Search for pattern (a)?(b):(c)
+    # p = re.compile(r'\((?P<a>.*)\)\?\((?P<b>.*)\):\((?P<c>.*)\)')
+
+    # # Replace pattern into ((not not (a)) * (b) + (not (a)) * (c))
+    # new_tcut_selection,ntimes = p.subn(r'((not not (\g<a>)) * (\g<b>) + (not (\g<a>)) * (\g<c>))',tcut_selection)
+
+    def find_first(string):
+        stack = 0
+        found = False
+        for i, c in sorted(enumerate(string), reverse=True):
+            if c == '(':
+                stack += 1
+                found = True
+            if c == ')':
+                stack -= 1
+            if stack == 1 and found:
+                return string[i+1:]
+    
+    def find_last(string):
+        stack = 0
+        found = False
+        for i, c in sorted(enumerate(string), reverse=False):
+            if c == ')':
+                stack += 1
+                found = True
+            if c == '(':
+                stack -= 1
+            if stack == 1 and found:
+                return string[:i]
+
+    components = re.split(r'[\?:]',tcut_selection)
+    if len(components) >= 3:
+        new_tcut_selection = ''
+        for i in range(0,len(components)-1,2):
+            out = f"{find_first(components[i])}?{components[i+1]}:{find_last(components[i+2])}" # ternary expression inside parenthesis
+            new = f"(not not ({find_first(components[i])})) * ({components[i+1]}) + (not ({find_first(components[i])})) * ({find_last(components[i+2])})"
+            new_tcut_selection = re.sub(re.escape(out), new, tcut_selection)
+            tcut_selection = new_tcut_selection
+        return new_tcut_selection
+    else:
+        return tcut_selection
+
+
 def get_list_of_columns_in_selection(tcut_selection:str):
     
     # 1st step: recognize all variable names
@@ -44,12 +88,13 @@ def get_list_of_columns_in_selection(tcut_selection:str):
         "/" : " ",
         "+" : " ",
         "-" : " ",
-        "sqrt": " "
+        "sqrt": " ",
+        "not": " "
     }
     remove_patterns = _multiple_replace(ignore_patterns, tcut_selection)
 
-    remove_marks = re.sub('[<&>!=|-]',' ',remove_patterns)
-    # remove_marks = re.sub(r'[\?:<&>!=|-]',' ',remove_patterns) # Add ?, : for ternary
+    # remove_marks = re.sub('[<&>!=|-]',' ',remove_patterns)
+    remove_marks = re.sub(r'[\?:<&>!=|-]',' ',remove_patterns) # Add ?, : for ternary
     variables = []
     for x in remove_marks.split():
         try:
@@ -104,7 +149,8 @@ def _replace_sqrt(tcut_selection:str):
 
 
 def _translate_selection(tcut_selection:str, verbose:bool=False):
-    tcut_selection_after_sqrt = _replace_sqrt(tcut_selection)
+    tcut_selection_after_ternary = _replace_ternary_operator(tcut_selection)
+    tcut_selection_after_sqrt = _replace_sqrt(tcut_selection_after_ternary)
     tcut_selection_with_event = _decorate_columns_in_selection(tcut_selection_after_sqrt)
     tcut_selection_after_operator_replacement = _replace_operators(tcut_selection_with_event)
     selection_in_func_adl = _replace_boolean(tcut_selection, tcut_selection_after_operator_replacement)
