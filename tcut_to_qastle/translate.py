@@ -180,9 +180,9 @@ def _translate_selected_columns(selected_columns:str):
 def translate(tree_name:str, selected_columns:str = "", tcut_selection:str = "", verbose:bool = False):
     if verbose: print(f'\033[32mTCut selection syntax:\033[0m\n{tcut_selection}\n\n')
     _check_parentheses(tcut_selection)
-    if tree_name is "":
+    if tree_name == "":
         raise Exception("Tree name is missing")
-    if tcut_selection is "":
+    if tcut_selection == "":
         query = f"EventDataset(\"ServiceXDatasetSource\", \"{tree_name}\").Select(\"lambda event:  {_translate_selected_columns(selected_columns)} \")"
     else:
         query = f"EventDataset(\"ServiceXDatasetSource\", \"{tree_name}\").Where(\"lambda event: {_translate_selection(tcut_selection, verbose)} \").Select(\"lambda event: {_translate_selected_columns(selected_columns)} \")"    

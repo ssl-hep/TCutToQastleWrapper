@@ -10,4 +10,4 @@ Usage:
 
 from .translate import translate, get_list_of_columns_in_selection
 
-__version__ = '0.6'
+__version__ = '0.7'
